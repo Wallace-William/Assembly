@@ -1,0 +1,128 @@
+Assembly cheat sheet:
+
+16, 32-bit registers:
+	R0-R12 general purpose
+	R13    stack pointer
+	R14    link register
+	R15    program counter
+---------------------------------------------------------------------------------------	
+Basic:
+	mov rd, ra (constant)
+	add rd, ra, rb (constant) @ rd = ra + rb      //rd and rb can't be the same
+	sub rd, ra, rb (constant) @ rd = ra - rb
+	mul rd, ra, rb (constant) @ rd = ra * rb      //rd and ra can't be the same
+	mla rd, ra, rb, rc	  @ rd = ra * rb + rc //rd can be same as rc
+---------------------------------------------------------------------------------------
+Bitwise Operators:						3 =>	0 0 1 1 
+	and rd, ra, rb (constant) 				5 =>	0 1 0 1
+	orr rd, ra, rb (constant) ->inclusive or (can be both)	
+	eor rd, ra, rb (constant) ->exclusive or (not both)	and->	0 0 0 1
+								orr->   0 1 1 1
+								eor->	0 1 1 0
+---------------------------------------------------------------------------------------
+Logical Shifts:								abcde
+	lsl rd, constant	@rd<<constant times			
+	lsl rd, ra, constant	@rd = ra<<constant times  lsl rd,#1	bcde0
+	lsr (same as lsl)				  lsr rd,#1     0abcd
+---------------------------------------------------------------------------------------
+Branching:
+	ble (branch if less than or equal to)
+	bne (branch if not equal)
+	blt (branch if less than)
+	bge (branch if greater than or equal to)
+	bgt (branch if greater than)
+	beq (branch if equal to)
+	bal (branch always)
+---------------------------------------------------------------------------------------
+Load/Store:
+	ldr rd, address		@puts address into rd
+	ldr rd, [rn]		@load into rd what is in address rn
+	ldr rd, [rn,#offset]	@address to load from is rn+offset, rn doesn't change
+	ldr rd, [rn], #offset	@get what is at address rn and load into rd, produce new rn from offset
+	ldrb (same as above)	@load byte at a time
+	str rn, [rd]		@store value in rn to address rd
+	strb (same as above)	@store byte at a time
+---------------------------------------------------------------------------------------
+Write to stdout:
+	mov r7, #4		@syscall for write
+	mov r0, #1		@stdout
+	mov r2, #(space)	@space allocated for write
+	ldr r1, =(label)	@address of output
+	swi 0
+Read Input From StdIn:
+	mov r7, #3		@syscall for read
+	mov r0, #0		@stdin
+	mov r2, #(space)	@space for read
+	ldr r1, =(label)	@address of input
+	swi 0
+
+
+
+
+
+
+
+Storage:
+	.data
+values:
+	.space #	@ # of *bytes* allocated
+	.data
+string:
+	.asciz "   \n"  @string with null terminator
+	.ascii "     "	@no null
+	.data
+array:
+	.word #,#,#,... @Store 4-byte ints
+---------------------------------------------------------------------------------------
+Endianness:
+	.word 0x12345678(hex)		
+
+BF03   	12    BF00	Default Little Endian:	
+BF02	34    BF01		in gdb: x  /xb (gets first byte)
+BF01	56    BF02		should get 78(hex) -> 01111000(binary)
+BF00	78    BF03
+  ^             ^ 
+little	       big
+---------------------------------------------------------------------------------------
+gdb:
+	b labelname	@set breakpoint
+	run		@run program
+	s		@step through code
+	layout r	@show registers
+	quit		@exit
+	x /d 0x100a4	@shows number at given address
+	x /xb 		@gets first byte
+	x /bd		@examine byte in decimal at given address
+---------------------------------------------------------------------------------------
+Subroutines:
+_start:
+    mov r9, #13
+    bl fx		@Sets the link register
+_exit:
+   mov r7, #1
+   swi 0
+fx:
+    add r9, #14
+    bx lr		@Return to address in link register
+---------------------------------------------------------------------------------------
+Conditional Commands:
+cmp r0, #5
+movgt r1, #10
+movle r2, #20
+---------------------------------------------------------------------------------------
+Stack:
+    stmfd address,{reg list}	@begin address, and the list of reg to store at
+    ldmfd address,{reg list}	@begin address, list to load from
+    stmfd sp!,{r2-r5}f		@update stack pointer with sp!
+				 _______
+_start:				|_______|
+    mov r1, #23		   ->sp!	|_r1=23_|0x864 @with sp update
+    mov r2, #47			|_r2=47_|0x868
+    mov r3, #65			|_r3=65_|0x86c
+    stmfd sp!, {r1-r3}	    ->sp|_______|0x870 @without sp update after store
+    add r1, r3			 _______
+    add r2, #3			|_______|
+    add r3, #3		   ->sp!	|_r1=23_|*
+    ldmfd sp!, {r1,r3}		|_r2=47_|*
+				|_r3=65_|*
+			    ->sp	|_______|# gets the 3 register from here

@@ -1,0 +1,93 @@
+/*
+
+William Wallace
+
+
+*/
+
+    .global _start
+
+_start:
+    mov r1, #13
+    mov r2, #0b110      @6 in base 10
+    mov r3, #0x14       @20 in base 10
+
+    sub r4, r1, r2      @R4 = 13-6
+    mul r0, r4, r3      @R0 = 7*20
+    lsr r0, #2          @logical shift right 2 times to divide by 4
+                                @140 = 1000 1100  >>2   0010 0011 = 35
+
+_exit:
+    mov r7, #1
+    swi 0
+------------------------------------------------------------------------
+/*
+
+William Wallace
+
+
+*/
+
+
+    .global _start
+
+_start:
+    mov r1, #0          @initialize sum
+    mov r3, #20         @Starting value
+
+loop:
+    cmp r1, #105
+    bge _output         @If R1 is greater than or equal to 105 go to _output label
+
+    add r1, r3          @Add R3 to total sum in R1
+
+    sub r3, #1          @20,19,18,...
+
+    bal loop
+
+
+_output:
+    mov r0, r3          @Stores the number that made sum exceed 105
+
+
+_exit:
+    mov r7, #1
+    swi 0
+------------------------------------------------------------------------
+/*
+
+William Wallace
+
+*/
+
+
+    .global _start
+
+_start:
+    mov r0, #0          @initialize sum
+    mov r2, #1          @initalize loop counter
+
+
+loop:
+    cmp r2, #15
+    bgt _exit           @Goes to exit label if R2 is greater than 15
+
+    and r3, r2, #1      @Checks to see if R2 is odd
+    cmp r3, #1
+
+    beq sum             @if R2 is odd go to sum label
+
+    add r2, #1          @increment R2 by 1 and go back to loop label
+
+    bal loop
+
+sum:
+    add r0, r2          @Adds R2 to total sum located in R0
+    add r2, #1          @increment R2 by 1 and go back to loop label
+
+    bal loop
+
+
+_exit:
+    mov r7, #1
+    swi 0
